@@ -1,68 +1,50 @@
 import streamlit as st
-import face_recognition
-import os
+import cv2
 import numpy as np
 from PIL import Image
 
-st.set_page_config(page_title="Face Recognition System")
-st.title("Face Recognition System")
+st.set_page_config(page_title="Face Detection System", layout="centered")
 
-KNOWN_FACES_DIR = "known_faces"
+st.title("😎 Face Detection System")
+st.write("Streamlit Cloud compatible face detection app")
 
-# ---------------- Load known faces ----------------
-known_face_encodings = []
-known_face_names = []
+# Load Haar Cascade
+face_cascade = cv2.CascadeClassifier(
+    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+)
 
-for file in os.listdir(KNOWN_FACES_DIR):
-    if file.lower().endswith((".jpg", ".png", ".jpeg")):
-        img = face_recognition.load_image_file(
-            os.path.join(KNOWN_FACES_DIR, file)
-        )
-        enc = face_recognition.face_encodings(img)
-        if enc:
-            known_face_encodings.append(enc[0])
-            known_face_names.append(os.path.splitext(file)[0])
-
-st.success("Known faces loaded")
-
-# ---------------- Camera buttons ----------------
+# Session state for camera
 if "camera_on" not in st.session_state:
     st.session_state.camera_on = False
 
+# Buttons
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("📷 Start Camera"):
+    if st.button("▶ Start Camera"):
         st.session_state.camera_on = True
 
 with col2:
-    if st.button("🛑 Stop Camera"):
+    if st.button("⏹ Stop Camera"):
         st.session_state.camera_on = False
 
-# ---------------- Camera Input ----------------
-recognized_name = "None"
-
+# Camera input
 if st.session_state.camera_on:
-    img_file = st.camera_input("Take a photo")
+    image = st.camera_input("Take a picture")
 
-    if img_file:
-        image = Image.open(img_file)
-        img_np = np.array(image)
+    if image is not None:
+        img = Image.open(image)
+        img_np = np.array(img)
 
-        face_locations = face_recognition.face_locations(img_np)
-        face_encodings = face_recognition.face_encodings(
-            img_np, face_locations
-        )
+        gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(
-                known_face_encodings, face_encoding
-            )
-            if True in matches:
-                recognized_name = known_face_names[matches.index(True)]
-            else:
-                recognized_name = "Unknown"
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img_np, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-# ---------------- Result outside box ----------------
-st.markdown("## 🧑 Recognized Person")
-st.success(recognized_name)
+        st.image(img_np, caption="Detected Face(s)", use_column_width=True)
+
+        if len(faces) > 0:
+            st.success(f"✅ Face Detected: {len(faces)}")
+        else:
+            st.warning("❌ No face detected")
