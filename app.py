@@ -7,6 +7,7 @@ st.set_page_config(page_title="Face Detection System", layout="centered")
 
 st.title("😎 Face Detection System")
 st.write("Streamlit Cloud compatible face detection app")
+st.markdown('''**Design and Developed by: Himanshu pal**''')
 
 # Load Haar Cascade
 face_cascade = cv2.CascadeClassifier(
@@ -48,5 +49,6 @@ if st.session_state.camera_on:
             st.success(f"✅ Face Detected: {len(faces)}")
         else:
             st.warning("❌ No face detected")
-            st.markdown('''**Design and Developed by: Himanshu pal**''')
+            
+
 
