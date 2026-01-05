@@ -48,3 +48,5 @@ if st.session_state.camera_on:
             st.success(f"✅ Face Detected: {len(faces)}")
         else:
             st.warning("❌ No face detected")
+            st.markdown('''**Design and Developed by: Himanshu pal**''')
+
